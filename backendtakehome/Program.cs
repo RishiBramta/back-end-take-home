@@ -9,17 +9,69 @@ using Microsoft.VisualBasic;
 
 namespace backendtakehome
 {
-    public class Graph
+    public class Program
     {
+
+        public static void Main(String[] args)
+        {
+            var dir = Directory.GetCurrentDirectory();
+            var Airportfilefolder = @"\data\full\airports.csv";
+            var Airportfullpath = dir + Airportfilefolder;
+            DataTable Airport = LoadairportFile(Airportfullpath);
+
+            var routestfilefolder = @"\data\full\routes.csv";
+            var routesfullpath = dir + routestfilefolder;
+            DataTable Routes = LoadroutFile(routesfullpath);
+            bool validorign;
+            string s;
+            string d;
+            bool valideatation;
+
+            do
+            {
+                Console.WriteLine("Please Enter the Origin Airport Code ");
+                s = Console.ReadLine().ToUpper();
+
+                validorign = Airport.AsEnumerable().Any(row => s.ToString() == row.Field<string>("IATA 3"));
+                if (!validorign)
+                {
+                    Console.WriteLine("Invalid Origin Airport Code. \n Please Enter a Valid Airport Code");
+                }
+            } while (!validorign);
+
+            do
+            {
+                Console.WriteLine("Please Enter the Destation Airport Code ");
+                d = Console.ReadLine().ToUpper();
+
+                valideatation = Airport.AsEnumerable().Any(row => d.ToString() == row.Field<string>("IATA 3"));
+                if (!valideatation)
+                {
+                    Console.WriteLine("Invalid Destnation Airport Code. \n Please Enter a Valid Airport Code");
+                }
+            } while (!valideatation);
+
+            // Create a sample graph
+            var numberofroutes = new Int32[Routes.Rows.Count];
+            Program g = new Program(numberofroutes.Length);
+
+            for (int i = 0; i < numberofroutes.Length; i++)
+            {
+                g.addEdge(i, Routes.Rows[i]["Origin"].ToString(), Routes.Rows[i]["Destination"].ToString());
+            }
+
+            Console.WriteLine("Finding The Shortest Route From " +
+                                 (string.Join(",", s)) + " To " + (string.Join(",", d)));
+
+            g.printAllPaths(s, d);
+        }
         // No. of vertices in graph 
         private int v;
 
-        // adjacency list 
         private List<string>[] adjList;
         
-
         // Constructor 
-        public Graph(int vertices)
+        public Program(int vertices)
         {
             // initialise vertex count 
             this.v = vertices;
@@ -28,8 +80,6 @@ namespace backendtakehome
             initAdjList();
         }
 
-        // utility method to initialise 
-        // adjacency list 
         private void initAdjList()
         {
             adjList = new List<string>[v];
@@ -43,29 +93,19 @@ namespace backendtakehome
         // add edge from u to v 
         public void addEdge(int i, string u, string v)
         {
-            // Add v to u's list. 
             adjList[i].Add(u);
             adjList[i].Add(v);
         }
 
-        // Prints all paths from 
-        // 's' to 'd' 
         public void printAllPaths(string s, string d)
         {
             string[] isVisited = new string[v];
             List<string> pathList = new List<string>();
             List<string> Destinations = new List<string>();
 
-            // Call recursive utility 
             printAllPathsUtil(s, d, isVisited, pathList, Destinations);
         }
 
-        // A recursive function to print 
-        // all paths from 'u' to 'd'. 
-        // isVisited[] keeps track of 
-        // vertices in current path. 
-        // localPathList<> stores actual 
-        // vertices in the current path 
         private void printAllPathsUtil(string s, string d,
                                         string[] isVisited,
                                 List<string> localPathList, List<string> Destinations)
@@ -90,10 +130,8 @@ namespace backendtakehome
 
                                 Console.WriteLine(string.Join(" ", localPathList));
                                 Console.Read();
-                                // if match found then no need 
-                                // to traverse more till depth 
                                 v = 0;
-                                break;
+                                System.Environment.Exit(-1);
                             }
                             if (!Destinations.Contains(adjList[i][0].ToString()))
                             {
@@ -107,7 +145,8 @@ namespace backendtakehome
                     }
                 }
             }
-            
+            Console.WriteLine("Sorry! No Routs Found.");
+            Console.Read();
         }
 
         public static DataTable LoadairportFile(string filePath)
@@ -156,44 +195,6 @@ namespace backendtakehome
                 }
             }
             return dt;
-        }
-
-        // Driver code 
-        public static void Main(String[] args)
-        {
-            Console.WriteLine("Please Enter the Origin Airport Code ");
-            string s = Console.ReadLine().ToUpper();
-            Console.WriteLine("Please Enter the Destation Airport Code ");
-            string d = Console.ReadLine().ToUpper();
-
-            DataTable Airport = LoadairportFile(@"C:\Users\Rishi.Bramta\Downloads\data\\full\airports.csv");
-            DataTable Routes = LoadroutFile(@"C:\Users\Rishi.Bramta\Downloads\data\\full\routes.csv");
-
-            var validorign = Airport.AsEnumerable().Any(row => s.ToString() == row.Field<string>("IATA 3"));
-            if (!validorign)
-            {
-                Console.WriteLine("Invalid Origin");
-            }
-
-            var valideatation = Airport.AsEnumerable().Any(row => d.ToString() == row.Field<string>("IATA 3"));
-            if (!valideatation)
-            {
-                Console.WriteLine("Invalid Destnation");
-            }
-
-            // Create a sample graph
-            var numberofroutes = new Int32[Routes.Rows.Count];
-            Graph g = new Graph(numberofroutes.Length);
-
-            for (int i = 0; i < numberofroutes.Length; i++)
-            {
-                g.addEdge(i, Routes.Rows[i]["Origin"].ToString(), Routes.Rows[i]["Destination"].ToString());
-            }
-        
-            Console.WriteLine("Following is shortest route from " +
-                                 (string.Join(",", s )) + " to "  + (string.Join(",", d )));
-
-            g.printAllPaths(s, d);
         }
     }
 }
